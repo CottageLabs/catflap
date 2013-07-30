@@ -1,0 +1,16 @@
+{
+    "issn" : ["1234-5678", "9876-5432", ...],
+    "canonical_journal_name" : "Journal of Stuff",
+    "journal_name" : ["Journal of Stuff", "International Journal of Things", ...],
+    "canonical_publisher" : "Elsevier"
+    "publisher" : ["Elsevier", "Elsevier GmbH", ...]
+    "provenance" : [
+        { "issn" : "1234-5678", "source" : "pubmed/12345678", "date" : "<yesterday>"},
+        {"issn" : "9876-5432", "source" : "repo/item/456", ...},
+        {"journal_name" : "Journal of Stuff", "source" : "pubmed/12345678", ...},
+        {"journal_name" : "Journal of Stuff", "source" : "repo/item/456", ...},
+        {"journal_name" : "International Journal of Stuff", "source" : "repo/item/456", ...},
+        {"publisher" : "Elsevier" : "source" : "repo/item/456"},
+        {"publsier" : "Elsevier GmbH", "source" : pubmed/12345678, }
+    ]
+}
