@@ -37,13 +37,14 @@ class Journal(DomainObject):
                 publisher=[publisher])
         return instance.find()
         
-    def find(self):
+    def find(self, similar=False):
         terms = {}
 
         for field in self.fields:
             terms[field] = self.data[field]
 
-        r = self.query(terms=terms)
+        r = self.query(terms=terms, terms_operator="should")
+
         if 'hits' not in r:
             return None
 
@@ -54,12 +55,12 @@ class Journal(DomainObject):
 
         results = []
         for hit in r['hits']:
-            results.append(Journal(hit))
+            results.append(Journal(**hit))
         
         return results
 
     def propagate(self):
-        journals_like_me = self.find()
+        journals_like_me = self.find(similar=True)
 
         if not journals_like_me:
             return False
@@ -72,6 +73,9 @@ class Journal(DomainObject):
         for journal in journals_like_me[:] :
             if journal.data['id'] == self.data['id']:
                 journals_like_me.remove(journal)
+
+        if not journals_like_me:
+            return False
 
         for journal in journals_like_me:
             for field in self.fields:

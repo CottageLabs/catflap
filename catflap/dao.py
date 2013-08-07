@@ -84,7 +84,6 @@ class DomainObject(UserDict.IterableUserDict):
 
         r = requests.post(self.target() + self.data['id'], data=json.dumps(self.data))
 
-
     @classmethod
     def bulk(cls, bibjson_list, idkey='id', refresh=False):
         data = ''
@@ -134,7 +133,7 @@ class DomainObject(UserDict.IterableUserDict):
         return keys
         
     @classmethod
-    def query(cls, recid='', endpoint='_search', q='', terms=None, facets=None, **kwargs):
+    def query(cls, recid='', endpoint='_search', q='', terms=None, terms_operator='must', facets=None, **kwargs):
         '''
         Perform a query on backend.
 
@@ -142,6 +141,7 @@ class DomainObject(UserDict.IterableUserDict):
         :param endpoint: default is _search, but could be _mapping, _mlt, _flt etc.
         :param q: maps to query_string parameter if string, or query dict if dict.
         :param terms: dictionary of terms to filter on. values should be lists. 
+        :param terms_operator: "must" or "should"
         :param facets: dict of facets to return from the query.
         :param kwargs: any keyword args as per
             http://www.elasticsearch.org/guide/reference/api/search/uri-request.html
@@ -161,17 +161,17 @@ class DomainObject(UserDict.IterableUserDict):
                 query['facets'][k] = {"terms":v}
 
         if terms:
-            boolean = {'must': [] }
+            boolean = {terms_operator: [] }
             for term in terms:
                 if not isinstance(terms[term],list): terms[term] = [terms[term]]
                 for val in terms[term]:
                     obj = {'term': {}}
                     obj['term'][ term ] = val
-                    boolean['must'].append(obj)
+                    boolean[terms_operator].append(obj)
             if q and not isinstance(q,dict):
-                boolean['must'].append( {'query_string': { 'query': q } } )
+                boolean[terms_operator].append( {'query_string': { 'query': q } } )
             elif q and 'query' in q:
-                boolean['must'].append( query['query'] )
+                boolean[terms_operator].append( query['query'] )
             query['query'] = {'bool': boolean}
 
         for k,v in kwargs.items():
