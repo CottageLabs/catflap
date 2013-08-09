@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 
 class DomainObject(UserDict.IterableUserDict):
     __type__ = None # set the type on the model that inherits this
+    base_index_url = 'http://' + str(config.ELASTIC_SEARCH_HOST).lstrip('http://').rstrip('/') + '/' + config.ELASTIC_SEARCH_DB
 
     def __init__(self, **kwargs):
         '''
@@ -45,9 +46,24 @@ class DomainObject(UserDict.IterableUserDict):
             
     @classmethod
     def target(cls):
-        t = 'http://' + str(config.ELASTIC_SEARCH_HOST).lstrip('http://').rstrip('/') + '/'
-        t += config.ELASTIC_SEARCH_DB + '/' + cls.__type__ + '/'
-        return t
+        return  cls.base_index_url + '/' + cls.__type__ + '/'
+
+    @classmethod
+    def initialise_index(cls):
+        mappings = config.MAPPINGS
+        for key, mapping in mappings.iteritems():
+            im = cls.base_index_url + '/' + key + '/_mapping'
+            exists = requests.get(im)
+            if exists.status_code != 200:
+                requests.post(cls.base_index_url) # create index
+                requests.post(cls.base_index_url + '/' + key + '/test', data=json.dumps({'id':'test'})) # create type
+                requests.delete(cls.base_index_url + '/' + key + '/' + 'test') # delete data used to create type
+                r = requests.put(im, json.dumps(mapping))
+                log.info(str(key) + ', ' + str(r.status_code))
+                return r.status_code
+            else:
+                r = requests.put(im, json.dumps(mapping)) # update mapping
+                return r.status_code
     
     @classmethod
     def makeid(cls):
@@ -180,6 +196,7 @@ class DomainObject(UserDict.IterableUserDict):
             else:
                 query[k] = v
 
+        print json.dumps(query, indent=4)
         if endpoint in ['_mapping']:
             r = requests.get(cls.target() + recid + endpoint)
         else:
