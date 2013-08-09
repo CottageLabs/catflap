@@ -1,0 +1,18 @@
+issn
+publisher_name
+journal_title
+journal_abbreviation
+
+
+
+
+# add a set of ISSN, JOurnal Name and Publisher which are a coherent set to the catalogue
+catflap.add(issn=[], journal_name=[], publisher=[], source)
+
+# get the ISSN, Journal Name, Publisher (one at a time)
+catflap.get(issn="", journal_name="", publisher="")
+
+def get(**kwargs):
+    pass
+
+catflap.Journal.add(issn=[1555-2101, 0160-6689], journal_name=["J Clin Psychiatry", "The Journal of clinical psychiatry"], electronic_issn = [1555-2101])
