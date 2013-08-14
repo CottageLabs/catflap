@@ -196,7 +196,6 @@ class DomainObject(UserDict.IterableUserDict):
             else:
                 query[k] = v
 
-        print json.dumps(query, indent=4)
         if endpoint in ['_mapping']:
             r = requests.get(cls.target() + recid + endpoint)
         else:
