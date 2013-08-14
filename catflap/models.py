@@ -91,7 +91,7 @@ class Journal(DomainObject):
 
         for journal in journals_like_me:
             for field,val in self.data.items():
-                journal[field] = self.merge(
+                journal[field] = self.make_merge_list(
                         val,
                         journal.data.get(field) # journal.get is a
                         # different method from the dictionary .get
@@ -102,25 +102,21 @@ class Journal(DomainObject):
         return True
 
     @staticmethod
-    def merge(src, dst):
+    def make_merge_list(*args):
         '''
-        All elements in src which are not in dst are copied to dst. Original
-        dst list not modified.
-    
-        Returns the modified version of dst.
+        All arguments are added to a list. If one of the arguments is a
+        list itself, then its elements get appended to the result (no
+        nested lists).
         '''
-        if not src: return dst
-        if not dst: return src
 
-        if not isinstance(src, list) and not isinstance(dst, list):
-            return dst + src # append
+        results = []
+        for a in args:
+            if isinstance(a, list):
+                results.extend(a)
+            else:
+                results.append(a)
 
-        new_dst = dst[:]
-        for item in src:
-            if item not in dst:
-                new_dst.append(item)
-    
-        return new_dst
+        return list(set(results))
 
     @classmethod
     def check_journal_data(cls, **kwargs):
