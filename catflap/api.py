@@ -3,7 +3,10 @@ from catflap.models import Journal as JournalModel
 class Journal:
     @staticmethod
     def add(**kwargs):
-        return JournalModel.index(**kwargs)
+        JournalModel.index(**kwargs)
+        
+        # we need to refresh so that bulk loading operations can access the current data straight away
+        JournalModel.refresh()
 
     @staticmethod
     def search(**kwargs):

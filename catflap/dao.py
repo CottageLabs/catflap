@@ -114,7 +114,7 @@ class DomainObject(UserDict.IterableUserDict):
 
     @classmethod
     def refresh(cls):
-        r = requests.post(cls.target() + '_refresh')
+        r = requests.post(cls.base_index_url + '/_refresh')
         return r.json()
 
 
@@ -195,7 +195,7 @@ class DomainObject(UserDict.IterableUserDict):
                 query['from'] = v
             else:
                 query[k] = v
-
+        
         if endpoint in ['_mapping']:
             r = requests.get(cls.target() + recid + endpoint)
         else:

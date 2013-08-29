@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from catflap.dao import DomainObject as DomainObject
+from catflap.dao import log
 
 '''
 Define models in here. They should all inherit from the DomainObject.
@@ -40,6 +41,7 @@ class Journal(DomainObject):
     @classmethod
     def index(cls, **kwargs):
         instance = cls(**kwargs)
+        instance.generate_provenance()
         if not instance.propagate():
             instance.save()
 
@@ -47,12 +49,35 @@ class Journal(DomainObject):
     def search(cls, **kwargs):
         instance = cls(**kwargs)
         return instance.find()
+    
+    def generate_provenance(self):
+        # get the supplied source field, and then remove it from the object's data
+        source = self.data.get("source", "unknown")
+        if "source" in self.data:
+            del self.data["source"]
         
+        timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        # build a provenance object describing each field
+        # e.g. {"issn" : "1234-5678", "source" : "pubmed/12345678", "date" : "<yesterday>"},
+        provenance = []
+        for k, v in self.data.items():
+            if isinstance(v, list):
+                for val in v:
+                    p = {k : val, "source" : source, "date" : timestamp}
+                    provenance.append(p)
+            else:
+                p = {k : v, "source" : source, "date" : timestamp}
+                provenance.append(p)
+        
+        # attach the provenance to the item
+        self.data["provenance"] = provenance
+    
     def find(self, similar=False):
         terms = {}
 
         for k,v in self.data.items():
-            if v: # do not include None-s
+            if v and k != "provenance" : # do not include None-s or the provenance
                 terms[k + '.exact'] = v
 
         r = self.query(terms=terms, terms_operator="should")
@@ -91,12 +116,16 @@ class Journal(DomainObject):
 
         for journal in journals_like_me:
             for field,val in self.data.items():
-                journal[field] = self.make_merge_list(
-                        val,
-                        journal.data.get(field) # journal.get is a
-                        # different method from the dictionary .get
-                        )
-
+                if field != "provenance":
+                    # we can only merge lists of things which are primitives
+                    journal[field] = self.make_merge_list(
+                            val,
+                            journal.data.get(field) # journal.get is a
+                            # different method from the dictionary .get
+                            )
+                else:
+                    # provenance is a list of dicts, and we don't want to deduplicate it anyway
+                    journal[field] += val
             journal.save()
 
         return True
@@ -108,7 +137,6 @@ class Journal(DomainObject):
         list itself, then its elements get appended to the result (no
         nested lists).
         '''
-
         results = []
         for a in args:
             if isinstance(a, list):
@@ -150,6 +178,7 @@ class Journal(DomainObject):
 
         if not ok:
             log.debug(debug_msg)
+            print kwargs
             raise ValueError('You need to provide at least one piece \
 of information to create or find a Journal object.')
 
