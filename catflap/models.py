@@ -21,8 +21,6 @@ class Journal(DomainObject):
     # all the fields
     fields = list_fields + single_value_fields
 
-
-
     def __init__(self, **kwargs):
         Journal.check_journal_data(**kwargs)
 
@@ -41,7 +39,14 @@ class Journal(DomainObject):
     @classmethod
     def index(cls, **kwargs):
         instance = cls(**kwargs)
-        instance.generate_provenance()
+        
+        # for the moment we are going to not bother with provenance
+        # much more time thinking about the consequences of it and how it's going to
+        # be used are required
+        if "source" in instance.data:
+            del instance.data["source"]
+        # instance.generate_provenance()
+        
         if not instance.propagate():
             instance.save()
 
@@ -115,36 +120,48 @@ class Journal(DomainObject):
         #    return False
 
         for journal in journals_like_me:
+            dosave = False
             for field,val in self.data.items():
                 if field != "provenance":
                     # we can only merge lists of things which are primitives
-                    journal[field] = self.make_merge_list(
-                            val,
-                            journal.data.get(field) # journal.get is a
-                            # different method from the dictionary .get
-                            )
-                else:
-                    # provenance is a list of dicts, and we don't want to deduplicate it anyway
-                    journal[field] += val
-            journal.save()
+                    newdata, journal[field] = self.make_merge_list(journal.data.get(field, []), val)
+                    if newdata:
+                        dosave = True
+                        
+                # turning provenance handling off for the time being
+                #else:
+                #    # provenance is a list of dicts, and we don't want to deduplicate it anyway
+                #    journal[field] += val
+                
+            if dosave:
+                print "saving ", journal.id
+                journal.save()
+            else:
+                print "not saving ", journal.id
 
         return True
 
     @staticmethod
-    def make_merge_list(*args):
+    def make_merge_list(target, source):
         '''
         All arguments are added to a list. If one of the arguments is a
         list itself, then its elements get appended to the result (no
         nested lists).
         '''
+        # make sure we are dealing with lists
+        if not isinstance(target, list):
+            target = [target]
+        if not isinstance(source, list):
+            source = [source]
+        
+        newdata = False
         results = []
-        for a in args:
-            if isinstance(a, list):
-                results.extend(a)
-            else:
-                results.append(a)
-
-        return list(set(results))
+        for s in source:
+            if s not in target:
+                target.append(s)
+                newdata = True
+        
+        return newdata, target
 
     @classmethod
     def check_journal_data(cls, **kwargs):
@@ -193,3 +210,6 @@ of information to create or find a Journal object.')
             return True
         else:
             return False
+
+class Provenance(DomainObject):
+    __type__ = "provenance"

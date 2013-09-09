@@ -12,7 +12,7 @@ the DomainObject functions as required. See models.py for some examples.
 '''
 
 LOG_FORMAT = '%(asctime)-15s %(message)s'
-logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 log = logging.getLogger(__name__)
 
 class DomainObject(UserDict.IterableUserDict):
@@ -59,7 +59,7 @@ class DomainObject(UserDict.IterableUserDict):
                 requests.post(cls.base_index_url + '/' + key + '/test', data=json.dumps({'id':'test'})) # create type
                 requests.delete(cls.base_index_url + '/' + key + '/' + 'test') # delete data used to create type
                 r = requests.put(im, json.dumps(mapping))
-                log.info(str(key) + ', ' + str(r.status_code))
+                log.info("dao: " + str(key) + ', ' + str(r.status_code))
                 return r.status_code
             else:
                 r = requests.put(im, json.dumps(mapping)) # update mapping

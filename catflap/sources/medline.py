@@ -15,6 +15,10 @@ def list_files():
 def pmid_filepath(zip_filepath):
     return os.path.join(PMID_DIR, os.path.split(zip_filepath)[1].split(".")[0] + ".pmid.txt")
 
+def has_pmid_file(zip_filepath):
+    return os.path.exists(pmid_filepath(zip_filepath))
+    
+
 def extract_data(filepath, pmidfile):
     fn = os.path.split(filepath)[1]
     
@@ -119,6 +123,17 @@ def save_pmids(pmidfile, pmids):
 if __name__ == "__main__":
     files = list_zips()
     for f in files:
-        print "processing file ", f
-        pmidpath = pmid_filepath(f)
-        extract_data(f, pmidpath)
+        if has_pmid_file(f):
+            print "skipping ", f
+        else:
+            print "processing file ", f
+            pmidpath = pmid_filepath(f)
+            extract_data(f, pmidpath)
+        
+        
+        
+        
+        
+        
+        
+        
