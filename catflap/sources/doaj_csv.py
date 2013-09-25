@@ -17,17 +17,19 @@ _PUBLISHER = 3
 _ISSN = 5
 _EISSN = 6
 
-# Certain fields contain '-' as a way to record the field has no value.
-_NO_VAL = re.compile('^\s*-\s*$')
+# The following problematic values in the CSV must be ignored:
+# 1/ Certain fields contain '-' as a way to record the field has no value.
+# 2/ Some fields contain just whitespace
+_NO_VAL = re.compile('^\s*-*\s*$')
 
 def load_csv(filename):
-    _data = []
     with open(filename, 'rb') as csvfile:
         i = csv.reader(csvfile)
+        i.next() # we do not need the header
         for row in i:
             newrow = []
             for field in row:
-                if not no_val.match(field):
+                if not _NO_VAL.match(field):
                     newrow.append(field)
                 else: # keep the same number of columns
                     newrow.append('')
@@ -47,14 +49,14 @@ def index():
         if row[_EISSN]: eissn.append(row[_EISSN])
 
         publisher = []
-        if row[_PUBLISHER]: eissn.append(row[_PUBLISHER])
+        if row[_PUBLISHER]: publisher.append(row[_PUBLISHER])
 
-        Journal.add(issn=issns, journal_name=jnames, publisher_name=publisher, source=DOAJ_CSV_FN)
+        Journal.add(issn=issns, electronic_issn=eissn, journal_name=jnames, publisher_name=publisher, source=DOAJ_CSV_FN)
 
 if __name__ == '__main__':
     print 'Loading data from ' + DOAJ_CSV
     load_csv(DOAJ_CSV)
-    print 'Indexing data start ' + datetime.now.isoformat()
+    print 'Indexing data start ' + datetime.now().isoformat()
     index()
-    print 'Indexing data end ' + datetime.now.isoformat()
-    print 'Done.'
+    print 'Indexing data end ' + datetime.now().isoformat()
+    print 'Processed {0} records. Done.'.format(len(_data))
