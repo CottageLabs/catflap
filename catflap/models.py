@@ -11,9 +11,20 @@ the Domain Object.
 class Journal(DomainObject):
     __type__ = 'journal'
 
+    # A journal is identified by one of these fields. When a record is
+    # about to be indexed, this class will check whether a record about
+    # the journal being added already exists. However, a publisher name
+    # alone is insufficient to identify a distinct journal - a name, an
+    # ISSN, something else is necessary. Those are the identity fields,
+    # and one of them *has* to be specified when a record is getting
+    # added via catflap.api .
+    identity_fields = ['issn', 'print_issn', 'electronic_issn',
+            'journal_title', 'journal_abbreviation']
+
     # all the info we keep about a journal which is held in lists
-    list_fields = ['issn', 'journal_title', 'journal_abbreviation',
-            'publisher_name']
+    # FIXME get up-to-date information on which fields are arrays from
+    # the ES mapping, put these as arrays in the default mapping
+    list_fields = identity_fields + ['publisher_name']
 
     # normal fields
     single_value_fields = []
@@ -22,7 +33,6 @@ class Journal(DomainObject):
     fields = list_fields + single_value_fields
 
     def __init__(self, **kwargs):
-        Journal.check_journal_data(**kwargs)
 
         # All fields specified in Journal.list_fields should be lists.
         # We might often pass single values for list fields when adding
@@ -79,10 +89,16 @@ class Journal(DomainObject):
         self.data["provenance"] = provenance
     
     def find(self, similar=False):
+        # FIXME the similar parameter is not used anywhere in this
+        # method
         terms = {}
 
         for k,v in self.data.items():
-            if v and k != "provenance" : # do not include None-s or the provenance
+            if v and k != "provenance" and k in self.identity_fields:
+                # do not include None-s or the provenance
+                # also, only look for fields which identify the journal,
+                # not any old field the object happens to contain (like
+                # publisher_name)
                 terms[k + '.exact'] = v
 
         r = self.query(terms=terms, terms_operator="should")
@@ -163,53 +179,14 @@ class Journal(DomainObject):
         
         return newdata, target
 
-    @classmethod
-    def check_journal_data(cls, **kwargs):
-        '''
-        Check a keyword arguments dict for journal data. At least one of
-        the which has to be present. If none are present, it raises a
-        ValueError.
-
-        Returns a dict containing only the required journal data.
-        '''
-        data = {}
-        ok = False
-
-        for field in cls.fields:
-            debug_msg = field + ': '
-            try:
-                data[field] = kwargs[field]
-                if not isinstance(data[field], list):
-                    debug_msg += 'not a list, ok'
-                    ok = True
-                else:
-                    debug_msg += 'is a list, '
-                    if cls.check_list(data[field]):
-                        debug_msg += 'ok'
-                        ok = True # at least one field must be present
-                    else:
-                        debug_msg += 'NOT ok'
-            except KeyError:
-                debug_msg += 'does not exist'
-                pass
-
-        if not ok:
-            log.debug(debug_msg)
-            print kwargs
-            raise ValueError('You need to provide at least one piece \
-of information to create or find a Journal object.')
-
-        return data
-
-    @staticmethod
-    def check_list(l):
-        '''Make sure the list doesn't just have None elements.'''
-        tmp = [i for i in l if i]
-
-        if tmp:
-            return True
-        else:
-            return False
-
 class Provenance(DomainObject):
     __type__ = "provenance"
+
+def check_list(l):
+    '''Make sure a list doesn't just have None elements.'''
+    tmp = [i for i in l if i]
+
+    if tmp:
+        return True
+    else:
+        return False
