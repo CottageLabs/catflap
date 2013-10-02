@@ -222,6 +222,10 @@ class DomainObject(UserDict.IterableUserDict):
 
     def es_update(self, es_upd_script):  # update() is already a
                                          # dictionary method
+        # NOTE WARNING NOTE
+        # THIS IS RETURNING 500 Internal Error - NullPointer Exception
+        # on ES 0.90.1
+        # Code left here for posterity, but test whether it works first!
         '''
         Elasticsearch record update API,
         http://www.elasticsearch.org/guide/reference/api/update/
