@@ -220,4 +220,11 @@ class DomainObject(UserDict.IterableUserDict):
     def delete(self):        
         r = requests.delete(self.target() + self.id)
 
-
+    def es_update(self, es_upd_script):  # update() is already a
+                                         # dictionary method
+        '''
+        Elasticsearch record update API,
+        http://www.elasticsearch.org/guide/reference/api/update/
+        '''
+        r = requests.post(self.target() + self.id + '/_update',
+                          data=es_upd_script)
