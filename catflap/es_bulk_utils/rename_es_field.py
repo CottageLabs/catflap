@@ -25,7 +25,7 @@ rename_es_field.rename_field(source_name, destination_name,
 """
 
 import sys
-from models import Journal
+from catflap.models import Journal
 
 
 def rename_field(src, dst, q=None):

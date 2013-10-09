@@ -22,7 +22,7 @@ delete_es_field.delete_field(field_name, elasticsearch_query_string)
 """
 
 import sys
-from models import Journal
+from catflap.models import Journal
 
 
 def delete_field(name, q=None):
