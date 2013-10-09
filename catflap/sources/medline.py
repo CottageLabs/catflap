@@ -34,7 +34,7 @@ def extract_data(filepath, pmidfile):
     pmids = []
     records = []
     for mlc in root.findall("MedlineCitation"):
-        record = {"electronic_issn" : [], "print_issn" : [], "issn" : [], "journal_name" : [], "journal_abbr" : []}
+        record = {"electronic_issn" : [], "print_issn" : [], "issn" : [], "journal_title" : [], "journal_abbr" : []}
         has_data = False
         
         # record any pubmed ids that we encounter
@@ -70,8 +70,8 @@ def extract_data(filepath, pmidfile):
         titlels = journal.findall("Title")
         for e in titlels:
             has_data = True
-            if e.text not in record["journal_name"]:
-                record["journal_name"].append(e.text)
+            if e.text not in record["journal_title"]:
+                record["journal_title"].append(e.text)
         
         # add journal abbreviations
         isoels = journal.findall("ISOAbbreviation")
@@ -86,7 +86,7 @@ def extract_data(filepath, pmidfile):
         taels = info.findall("MedlineTA")
         for e in taels:
             has_data = True
-            if e.text not in record["journal_name"] and e.text not in record["journal_abbr"]:
+            if e.text not in record["journal_title"] and e.text not in record["journal_abbr"]:
                 record["journal_abbr"].append(e.text)
         
         # record the medline knowledge of this other issn - we don't necessarily know what type it is
@@ -98,7 +98,7 @@ def extract_data(filepath, pmidfile):
         
         # now write it to the ACAT via catflap
         if has_data:
-            jnames = record.get("journal_name", [])
+            jnames = record.get("journal_title", [])
             for a in record.get("journal_abbr", []):
                 if a not in jnames:
                     jnames.append(a)
@@ -106,11 +106,10 @@ def extract_data(filepath, pmidfile):
             if mypmid is not None:
                 source += " " + mypmid
             Journal.add(issn=record.get("issn", []) + record.get("electronic_issn", []) + record.get("print_issn", []),
-                        journal_name=jnames,
+                        journal_title=jnames,
                         electronic_issn=record.get("electronic_issn", []),
                         print_issn=record.get("print_issn", []),
-                        journal_abbreviation=record.get("journal_abbr", []),
-                        source=source)
+                        journal_abbreviation=record.get("journal_abbr", []))
     
     # save the pmids found in this file
     save_pmids(pmidfile, pmids)
