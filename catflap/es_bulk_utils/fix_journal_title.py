@@ -20,6 +20,7 @@ def fix(q=None):
 
     for record in everything['hits']['hits']:
         processed += 1
+        changed = False
         instance = Journal(**record['_source'])
 
         if FIX_FIELD not in instance:
@@ -40,6 +41,7 @@ def fix(q=None):
                 for subitem in t:
                     if subitem not in new_titles:
                         new_titles.append(subitem)
+                        changed = True
                 continue
 
             # fix 2 - remove values which are just True
@@ -49,9 +51,12 @@ def fix(q=None):
                                # - 'la', 1, False, "True" are all OK
                                # - True is not OK
                 new_titles.append(t)
+                changed = True
 
-        instance[FIX_FIELD] = new_titles
-        instance.save()
+        if changed:
+            instance[FIX_FIELD] = new_titles
+            instance.save()
+        
     Journal.refresh()
     return processed
 
