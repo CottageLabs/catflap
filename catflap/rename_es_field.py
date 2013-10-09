@@ -42,14 +42,19 @@ def rename_field(src, dst, q=None):
 
     for record in everything['hits']['hits']:
         instance = Journal(**record['_source'])
-        # if both source and destination are present, merge them as
-        # a list
-        if src in instance and dst in instance:
+
+        if src not in instance:
+        # The field we're renaming is not in this record. Move on.
+            continue
+        elif src in instance and dst in instance:
+        # If both source and destination are present, merge them as
+        # a list.
             instance[dst] = Journal.make_merge_list(
                 instance[dst], instance[src]
             )
         else:
             instance[dst] = instance[src]
+
         del instance[src]  # delete original field
         instance.save()
     Journal.refresh()
