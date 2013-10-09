@@ -53,11 +53,13 @@ def rename_field(src, dst, q=None):
         del instance[src]  # delete original field
         instance.save()
     Journal.refresh()
+    return everything['hits']['total']
 
 
 if __name__ == '__main__':
     if len(sys.argv) == 3:  # only source and destination of rename
-        rename_field(sys.argv[1], sys.argv[2])
+        processed = rename_field(sys.argv[1], sys.argv[2])
     elif len(sys.argv) == 4:  # also includes ES query string,
                               # apply rename only to its results
-        rename_field(sys.argv[1], sys.argv[2], sys.argv[3])
+        processed = rename_field(sys.argv[1], sys.argv[2], sys.argv[3])
+    print 'Processed {0} records. Done.'.format(processed)
