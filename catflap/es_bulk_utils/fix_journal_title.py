@@ -19,19 +19,16 @@ def fix(q=None):
               '\n ', everything
 
     for record in everything['hits']['hits']:
-        processed += 1
         changed = False
         instance = Journal(**record['_source'])
 
         if FIX_FIELD not in instance:
         # The field we're fixing is not in this record. Move on.
-            processed -= 1
             continue
 
         if not isinstance(instance[FIX_FIELD], list):
             strange.write(instance['id'] + ' - Journal title not a '
                                            'list' + '\n')
-            processed -= 1
             continue
 
         new_titles = []
@@ -48,6 +45,7 @@ def fix(q=None):
         if changed:
             instance[FIX_FIELD] = new_titles
             instance.save()
+            processed += 1
 
     Journal.refresh()
     return processed
