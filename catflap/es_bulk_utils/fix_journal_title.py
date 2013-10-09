@@ -36,16 +36,8 @@ def fix(q=None):
 
         new_titles = []
         for t in instance[FIX_FIELD]:
-            # fix 1 - flatten nested lists
-            if isinstance(t, list):
-                for subitem in t:
-                    if subitem not in new_titles:
-                        new_titles.append(subitem)
-                        changed = True
-                continue
-
-            # fix 2 - remove values which are just True
-            if t is not True:  # identity check - this will only be
+            # remove values which are just True
+            if t is not False:  # identity check - this will only be
                                # true if if t is not the Python boolean
                                # object True. E.g.:
                                # - 'la', 1, False, "True" are all OK
@@ -56,7 +48,7 @@ def fix(q=None):
         if changed:
             instance[FIX_FIELD] = new_titles
             instance.save()
-        
+
     Journal.refresh()
     return processed
 
