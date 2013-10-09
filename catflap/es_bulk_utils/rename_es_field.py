@@ -49,7 +49,7 @@ def rename_field(src, dst, q=None):
         elif src in instance and dst in instance:
         # If both source and destination are present, merge them as
         # a list.
-            instance[dst] = Journal.make_merge_list(
+            new_data, instance[dst] = Journal.make_merge_list(
                 instance[dst], instance[src]
             )
         else:
