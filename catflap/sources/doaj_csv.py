@@ -69,9 +69,7 @@ def index():
         if row[_PUBLISHER]: publisher.append(row[_PUBLISHER])
 
         Journal.add(issn=issns, electronic_issn=eissn,
-                    journal_title=jnames, publisher_name=publisher,
-                    source=DOAJ_CSV_URL,
-                    source_retrieved=datetime.now().isoformat())
+                    journal_title=jnames, publisher_name=publisher)
 
 
 if __name__ == '__main__':
