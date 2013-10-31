@@ -61,9 +61,9 @@ class Journal(DomainObject):
             instance.save()
 
     @classmethod
-    def search(cls, **kwargs):
+    def search(cls, size=10, **kwargs):
         instance = cls(**kwargs)
-        return instance.find()
+        return instance.find(size=size)
     
     def generate_provenance(self):
         # get the supplied source field, and then remove it from the object's data
@@ -88,7 +88,7 @@ class Journal(DomainObject):
         # attach the provenance to the item
         self.data["provenance"] = provenance
     
-    def find(self, similar=False):
+    def find(self, similar=False, size=10):
         # FIXME the similar parameter is not used anywhere in this
         # method
         terms = {}
@@ -101,7 +101,7 @@ class Journal(DomainObject):
                 # publisher_name)
                 terms[k + '.exact'] = v
 
-        r = self.query(terms=terms, terms_operator="should")
+        r = self.query(terms=terms, terms_operator="should", size=size)
 
         if 'hits' not in r:
             return None
